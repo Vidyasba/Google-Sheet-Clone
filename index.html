@@ -9,9 +9,9 @@
 <body>
     <div>
         <h1 id="current-cell">No cell selected</h1>
-        <button id="bold-btn">Btn</button>
-        <button id="italic-btn">IBtn</button>
-        <button id="underline-btn">UBtn</button>
+        <button id="bold-btn">B</button>
+        <button id="italic-btn"><i>I</i></button>
+        <button id="underline-btn"><u>U</u></button>
         <button id="left-btn">Left</button>
         <button id="center-btn">Center</button>
         <button id="right-btn">Right</button>
@@ -34,6 +34,13 @@
 
         <label for="fontColor">font Color</label>
         <input type="color" id="fontColor">
+
+        <!-- cut-cpy -->
+        <button id="cut-btn">cut</button>
+        <button id="cpy-btn">copy</button>
+        <button id="paste-btn">paste</button>
+        <button onclick="downloadMatrix()">Download</button>
+        <input id="upload-input" type="file" accept=".json">
     </div>
 
     <table id="my-table" >

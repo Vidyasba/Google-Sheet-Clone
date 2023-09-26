@@ -16,18 +16,46 @@ const fontSizeDropdown=document.getElementById('fontSizeDropdown');
 const bgColor=document.getElementById('bgColor');
 const fontColor=document.getElementById('fontColor');
 
+//
+const cutBtn=document.getElementById('cut-btn');
+const pasteBtn=document.getElementById('paste-btn');
+const cpyBtn=document.getElementById('copy-btn');
+
 //constants
 const COLS=26;
 const ROWS=100;
 let currentCell;
 let previousCell;
+let cutCell; //this cutcell will store
+let lastPressBtn;
 const transparent="transparent";
 const transparentBlue="#ddddff";
+let matrix=new Array(ROWS);
+
+const uploadInput=document.getElementById('upload-input');
 
 
+for(let row=0;row<ROWS;row++){
+    matrix[row]=new Array(COLS);
+    //matrix[0]->1st
+    //matrix[1]->2nd
+    for(let col=0;col<COLS;col++){
+        matrix[row][col]={}; //matrix[row][col] is reprsenting cell
+    }
+}
 
 
-
+function downloadMatrix(){
+    //2d matrix into a memory tahts accessible outside
+    const matrixString =JSON.stringify(matrix);
+    //matrixString -> into a blob
+    const blob =new Blob([matrixString],{type:'application/json'});
+    const link = document.createElement('a');
+    
+    link.href=URL.createObjectURL(blob);
+    link.download='table.json';
+    link.click();
+}
 
 
 
@@ -44,6 +72,23 @@ for(let row=1;row<=ROWS;row++){
 //passing th to get headers
 colGen("th",tHeadRow,true);
 
+
+//colRow -->row,col
+//A1 --> 0,0
+//A2 --> 1,0
+
+function updateObjectInMatrix(){
+    let id= currentCell.id;
+    //65 id[0] ->'A' -> 'A'.charCharAt(0) -> 65  
+    let col=id[0].charCodeAt(0) -65;
+    let row=id.substring(1)-1;
+    matrix[row][col]={
+        text:currentCell.innerText,
+        style:currentCell.style.cssText,
+        id:id, //why we are storing ids,we will see that later
+    };
+}
+
 //2.creating columns(A,B,C) and empty cells or td's
 function colGen(typeOfCell,tableRow,isInnerText,rowNumber){
     for(let col=0;col<COLS;col++){
@@ -58,6 +103,8 @@ function colGen(typeOfCell,tableRow,isInnerText,rowNumber){
             //COL ->A,B,C,D
             cell.setAttribute('id',`${String.fromCharCode(col+65)}${rowNumber}`)
             cell.setAttribute('contenteditable',true);
+            cell.addEventListener('input',updateObjectInMatrix);
+            
             cell.addEventListener('focus',(event)=>{
                  console.log(event.target);
                  //sending my cell which is focused or cliked by user for example A4:-colname and rownumb
@@ -98,9 +145,11 @@ function buttonHighlighter(button,styleProperty,textstyle){
      //checking my cell is bold or not
      if(currentCell.style[styleProperty]===textstyle){
         button.style.backgroundColor="#ddddff";
+       
     }
     else{
         button.style.backgroundColor=transparent;
+        
     }
 }   
     buttonHighlighter(boldbtn,'fontWeight',"bold");
@@ -161,17 +210,72 @@ rightbtn.addEventListener('click',()=>{
 //dropdown
 fontStyleDropdown.addEventListener('change',()=>{
     currentCell.style.fontFamily=fontStyleDropdown.value;
+    updateObjectInMatrix();
 })
 fontSizeDropdown.addEventListener('change',()=>{
     currentCell.style.fontSize=fontSizeDropdown.value;
+    updateObjectInMatrix();
 })
 
 //https://stackoverflow.com/questions/2141357/editable-select-element
 //coloring
 bgColor.addEventListener('input',()=>{
         currentCell.style.backgroundColor=bgColor.value;
-});
+        updateObjectInMatrix();
+    });
 //font color
 fontColor.addEventListener('input',()=>{
     currentCell.style.color=fontColor.value;
+    updateObjectInMatrix();
 })
+
+//cell data --> cell2 data
+//empty -->this will be having cell data --> in case of cut
+//celldata --> celldata in case of copy
+
+cutBtn.addEventListener('click',()=>{
+    lastPressBtn='cut';
+    cutCell={
+        text:currentCell.innerText,
+        style:currentCell.style.cssText,//cssText is basically 
+        //inLine css
+    }
+    //deleting current cell
+    currentCell.innerText='';
+    currentCell.style.cssText='';
+    updateObjectInMatrix();
+
+})
+cpyBtn.addEventListener('click',()=>{
+    lastPressBtn='copy';
+    cutCell={
+        text:currentCell.innerText,
+        style:currentCell.style.cssText,//cssText is basically 
+    }
+})
+pasteBtn.addEventListener('click',()=>{
+    currentCell.innerText=cutCell.text;
+    currentCell.style=cutCell.style;
+    // currentCell.style.cssText=cutCell.style;
+    if(lastPressBtn==="cut"){
+        //cutCell={};
+        cutCell=undefined;
+    }
+    updateObjectInMatrix();
+})
+//emptyObject.property =>undefined
+
+function uploadMatrix(event){
+    const file=event.target.files[0];
+    //FileReader helps me to ready my blod
+    if(file){
+        const reader=new FileReader();
+        reader.readAsText(file);
+        //this will trigger onload method of reader instance
+        reader.onload=function(event){
+            console.log(event.target);
+            const fileContent=JSON.parse(event.target.result);
+            console.log(fileContent);
+        }
+    }
+    }

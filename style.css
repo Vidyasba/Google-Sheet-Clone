@@ -11,3 +11,13 @@ th,td{
 td{
     outline: none;
 }
+
+#bold-btn,#italic-btn,#underline-btn{
+    width:40px;
+    margin: 10px 0px 10px ;
+}
+#left-btn ,#center-btn ,#right-btn{
+   
+    width: 60px;
+    text-align: center;
+}
