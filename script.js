@@ -1,7 +1,13 @@
+//cols and rows
+const COLS=26;
+const ROWS=100;
+
 //table
 const tHeadRow= document.getElementById('table-heading-row');
 const tBody=document.getElementById('table-body');
 const currentCellHeading = document.getElementById('current-cell');
+const sheetNo = document.getElementById('sheet-no');
+const buttonContainer = document.getElementById('button-container');
 //btns
 const boldbtn=document.getElementById('bold-btn');
 const italicsbtn=document.getElementById('italic-btn');
@@ -9,6 +15,12 @@ const Underlinebtn=document.getElementById('underline-btn');
 const leftbtn=document.getElementById('left-btn');
 const centerbtn=document.getElementById('center-btn');
 const rightbtn=document.getElementById('right-btn');
+const cutBtn=document.getElementById('cut-btn');
+const pasteBtn=document.getElementById('paste-btn');
+const cpyBtn=document.getElementById('copy-btn');
+const uploadInput = document.getElementById('upload-input');
+const addSheetBtn = document.getElementById('add-sheet-btn');
+const saveSheetBtn = document.getElementById('save-sheet-btn');
 //dropdown
 const fontStyleDropdown=document.getElementById('fontStyleDropdown');
 const fontSizeDropdown=document.getElementById('fontSizeDropdown');
@@ -16,25 +28,23 @@ const fontSizeDropdown=document.getElementById('fontSizeDropdown');
 const bgColor=document.getElementById('bgColor');
 const fontColor=document.getElementById('fontColor');
 
-//
-const cutBtn=document.getElementById('cut-btn');
-const pasteBtn=document.getElementById('paste-btn');
-const cpyBtn=document.getElementById('copy-btn');
 
-//constants
-const COLS=26;
-const ROWS=100;
+
+//declarations
 let currentCell;
 let previousCell;
-let cutCell; //this cutcell will store
+let cutCell; //this cutcell will store my Cell data;
 let lastPressBtn;
+let numSheets=1;
+let currentSheet=1;
+let prevSheet;
 const transparent="transparent";
 const transparentBlue="#ddddff";
 let matrix=new Array(ROWS);
 
-const uploadInput=document.getElementById('upload-input');
 
 
+function createNewMatrix(){
 for(let row=0;row<ROWS;row++){
     matrix[row]=new Array(COLS);
     //matrix[0]->1st
@@ -43,7 +53,9 @@ for(let row=0;row<ROWS;row++){
         matrix[row][col]={}; //matrix[row][col] is reprsenting cell
     }
 }
-
+}
+// this is creating matrix for the first time
+createNewMatrix();
 
 function downloadMatrix(){
     //2d matrix into a memory tahts accessible outside
@@ -60,6 +72,8 @@ function downloadMatrix(){
 
 
 //1.creating rows
+function tableBodyGen(){
+tBody.innerHTML='';
 for(let row=1;row<=ROWS;row++){
     const tr=document.createElement("tr");
     const th=document.createElement("th");
@@ -69,6 +83,8 @@ for(let row=1;row<=ROWS;row++){
     colGen('td',tr,false,row);
     tBody.append(tr);
 }
+}
+tableBodyGen();
 //passing th to get headers
 colGen("th",tHeadRow,true);
 
@@ -276,6 +292,94 @@ function uploadMatrix(event){
             console.log(event.target);
             const fileContent=JSON.parse(event.target.result);
             console.log(fileContent);
+            matrix=fileContent;
+            renderMatrix();
         }
     }
     }
+    uploadInput.addEventListener('input',uploadMatrix);
+    //26 local storage
+    if(localStorage.getItem(arrMatrix)){
+        matrix=JSON.parse(localStorage.getItem(arrMatrix))[0];
+        renderMatrix();
+    }
+
+    function genNextSheetButton(){
+        const btn =document.createElement('button');
+        numSheets++;
+        currentSheet=numSheets;
+        btn.innerText=`Sheet ${currentSheet}`;
+        btn.setAttribute('id' ,`sheet-${currentSheet}`);
+        btn.sheetAttribute('onclick','viewSheet(event');
+        buttonContainer.append(btn);
+    }
+
+    addSheetBtn.addEventListener('click',()=>{
+        genNextSheetButton();
+        sheetNo.innerText=`Sheet No - ${currentSheet}`;
+        // add nextSheetButton
+  //    Save Matrix 
+        saveMatrix();
+        //clean Matrix
+        createNewMatrix();// it's creating matrix again (sort of used as cleaner fn)
+        //clean html
+        tableBodyGen();
+    })
+    // saveMatrix
+// arrMatrix -> array for matrix
+// I should keep my arrMatrix in localStorage
+function saveMatrix() {
+    if (localStorage.getItem(arrMatrix)) {
+        // pressing add sheet not for the first time
+        let tempArrMatrix = JSON.parse(localStorage.getItem(arrMatrix));
+        tempArrMatrix.push(matrix);
+        localStorage.setItem(arrMatrix, JSON.stringify(tempArrMatrix));
+      } else {
+        //assuming there is no matrix stored previously in the local storage so creating oen for it
+        // pressing add sheet for the first time
+        let tempArrMatrix = [matrix];
+        localStorage.setItem(arrMatrix, JSON.stringify(tempArrMatrix));
+      }
+}
+function viewSheet(event){
+    // save prev sheet before doing anything
+    prevSheet=currentSheet;
+    currentSheet=event.target.id.split('-')[1];
+    let matrixArr = JSON.parse(localStorage.getItem(arrMatrix));
+    // save my matrix in local storage
+    matrixArr[prevSheet-1] = matrix;
+    localStorage.setItem(arrMatrix,JSON.stringify(matrixArr));
+  
+    // I have updated my virtual memory
+    matrix = matrixArr[currentSheet-1];
+    // clean my html table
+    tableBodyGen();
+    // render the matrix in html
+    renderMatrix();
+  }
+
+  // you are trying to save matrix in arrMatrix
+
+// how can you clean up matrix
+// option a -> 2d iteration and clean every object
+// obtion b -> make 2d matrix
+
+
+
+// I have sheet 1, sheet 2, sheet 3 buttons
+// get matrix from localStorage
+// and render it
+
+// id of button -> sheet-{number}
+
+// [matrix1,matrix2,matrix3]
+// sheet-1 -> matrix1
+// sheet-2 -> matrix2
+// sheet-3 -> matrix3
+
+
+// arrMatrix -> [matrix1,matrix2,matrix3];
+
+// matrix2 -> that is virtual memory of my table 2
+
+// matrix = matrix2
